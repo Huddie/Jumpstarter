@@ -4,7 +4,7 @@ module Jumpstarter
     class Setup
         class << self 
 
-            FILE = 'Setup'
+            FILE = 'Starter'
 
             def setup!()
                 ## Find path to maintainfile
