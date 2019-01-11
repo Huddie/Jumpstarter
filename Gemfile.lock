@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pkg-maintainer (1.1.15)
+    jump-starter (1.1.16)
       colorize
       commander
 
@@ -32,9 +32,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  pkg-maintainer!
+  jump-starter!
   rake
   rspec
 
 BUNDLED WITH
-   1.16.6
+   1.17.3

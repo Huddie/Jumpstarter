@@ -2,107 +2,31 @@
 
 require 'rubygems'
 require 'commander'
-require 'maintainer'
+require 'jumpstarter'
 
-module Maintainer
+module Jumpstarter
     class Kernal
         include Commander::Methods
         # include whatever modules you need
         def run
-            program :name, 'maintainer'
+            program :name, 'Jumpstarter'
             program :version, '0.0.1'
             program :description, 'Helps maintain dependencies'
 
-            command :setup do |c|
-                c.syntax = 'maintainer setup [options]'
+            command :start do |c|
+                c.syntax = 'Jumpstarter start [options]'
                 c.summary = ''
                 c.description = ''
                 c.example 'description', 'command example'
                 c.option '--some-switch', 'Some switch that does something'
                 c.action do |args, options|
-                    Maintainer::Runner.setup
+                    Jumpstarter::Runner.setup
                 end
             end
-
-            # command :install do |c|
-            #     c.syntax = 'maintainer setup [options]'
-            #     c.summary = ''
-            #     c.description = ''
-            #     c.example 'description', 'command example'
-            #     c.option '--some-switch', 'Some switch that does something'
-            #     c.action do |args, options|
-            #         if args[0] == "cocoapods"
-            #             Maintainer::Runner.install_cocoapods
-            #         elsif args[0] == "git"
-            #             Maintainer::Runner.install_git
-            #         elsif args[0] == "pip"
-            #             Maintainer::Runner.install_pip
-            #         end
-            #     end
-            # end
-
-            # command :uninstall do |c|
-            #     c.syntax = 'maintainer setup [options]'
-            #     c.summary = ''
-            #     c.description = ''
-            #     c.example 'description', 'command example'
-            #     c.option '--some-switch', 'Some switch that does something'
-            #     c.action do |args, options|
-            #         if args[0] == "cocoapods"
-            #             Maintainer::Runner.uninstall_cocoapods
-            #         end
-            #     end
-            # end
-
-            # command :pip do |c|
-            #     c.syntax = 'maintainer pod [options]'
-            #     c.summary = ''
-            #     c.description = ''
-            #     c.example 'description', 'command example'
-            #     c.option '--some-switch', 'Some switch that does something'
-            #     c.action do |args, options|
-            #         Maintainer::Runner.pip(pkg: "#{args[0]}")
-            #     end
-            # end
-
-            # command :pod do |c|
-            #     c.syntax = 'maintainer pod [options]'
-            #     c.summary = ''
-            #     c.description = ''
-            #     c.example 'description', 'command example'
-            #     c.option '--some-switch', 'Some switch that does something'
-            #     c.action do |args, options|
-            #         Maintainer::Runner.pod(podname: "#{args[0]}")
-            #     end
-            # end
-
-            # command :update do |c|
-            #     c.syntax = 'maintainer pod [options]'
-            #     c.summary = ''
-            #     c.description = ''
-            #     c.example 'description', 'command example'
-            #     c.option '--some-switch', 'Some switch that does something'
-            #     c.action do |args, options|
-            #         if args[0] == "all"
-            #             Maintainer::Runner.update_all!
-            #         end
-            #     end
-            # end
-
-            # command :help do |c|
-            #     c.syntax = 'maintainer help [options]'
-            #     c.summary = ''
-            #     c.description = ''
-            #     c.example 'description', 'command example'
-            #     c.option '--some-switch', 'Some switch that does something'
-            #     c.action do |args, options|
-            #         # Do something or c.when_called Maintainer::Commands::Help
-            #     end
-            # end
         run!
         end
     end
 end
 
-Maintainer::Kernal.new.run 
+Jumpstarter::Kernal.new.run 
 
