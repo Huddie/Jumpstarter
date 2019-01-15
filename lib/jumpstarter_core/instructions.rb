@@ -362,7 +362,7 @@ module Jumpstarter
 
         def run!()
             Dir.chdir "#{@proj_path}"
-            scheme_file_path = Dir.glob("./**/#{@scheme_name}".xcscheme)
+            scheme_file_path = Dir.glob("./**/#{@scheme_name}.xcscheme")
             dir_of_scheme = File.dirname(scheme_file_path)
             File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + scheme_file_path)
             return true
