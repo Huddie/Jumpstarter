@@ -1,6 +1,7 @@
 require_relative './commandRunner'
 require_relative './commands'
 require 'io/console'
+require 'nokogiri'
 
 module Jumpstarter
 
@@ -345,6 +346,98 @@ module Jumpstarter
         end
     end
 
+    #############################
+    ###  xcode instructions   ###
+    #############################
+    class XcodeDuplicateScheme < I_Instructions
+
+        def initialize(proj_path, scheme_name, msg_success, msg_error, should_crash)
+            @proj_path = proj_path
+            @scheme_name = scheme_name
+            @msg_success = msg_success
+            @msg_error = msg_error
+            @should_crash = should_crash
+            @original_dir = Dir.pwd
+        end
+
+        def run!()
+            Dir.chdir "#{@proj_path}"
+            scheme_file_path = Dir.glob("./**/#{@scheme_name}".xcscheme)
+            dir_of_scheme = File.dirname(scheme_file_path)
+            File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + scheme_file_path)
+            return true
+        end
+
+        def crash_on_error!()
+            return false
+        end
+
+        def success_message!()
+            if not @msg_success or @msg_success.empty?
+                return "[Successfully duplicated scheme] #{@scheme_name}"
+            end
+            return "#{@msg_success}"
+        end
+
+        def error_message!()
+            if  not @msg_error or @msg_error.empty?
+                return "[Failed to duplicate scheme] #{@scheme_name}"
+            end
+            return "#{@msg_error}"
+        end
+    end
+
+    class XcodeAddPairToScheme < I_Instructions
+
+        def initialize(proj_path, scheme_name, order_hint, msg_success, msg_error, should_crash)
+            @proj_path = proj_path
+            @scheme_name = scheme_name
+            @msg_success = msg_success
+            @msg_error = msg_error
+            @should_crash = should_crash
+            @original_dir = Dir.pwd
+            @order_hont = order_hint
+        end
+
+        def run!()
+            Dir.chdir "#{@proj_path}"
+            scheme_file_path = Dir.glob("./**/#{@scheme_name}.xcscheme")
+            dir_of_scheme = File.dirname(scheme_file_path)
+            File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + scheme_file_path)
+            Dir.chdir "#{@original_dir.chdir}"
+            managment_file_path = Dir.glob("./**/xcschememanagement.plist")
+            file = File.read(managment_file_path)
+            xml = Nokogiri::XML(file)
+            scheme_state = xml.at('SchemeUserState')
+            node = "<key>Copy of #{@scheme_name}.xcscheme</key>
+                    <dict>
+                        <key>orderHint</key>
+                        <integer>3</integer>
+                    </dict>"
+            scheme_state.add_child(Nokogiri::XML::Node.new(node, xml))
+            puts xml
+            return true
+        end
+
+        def crash_on_error!()
+            return false
+        end
+
+        def success_message!()
+            if not @msg_success or @msg_success.empty?
+                return "[Successfully duplicated scheme] #{@scheme_name}"
+            end
+            return "#{@msg_success}"
+        end
+
+        def error_message!()
+            if  not @msg_error or @msg_error.empty?
+                return "[Failed to duplicate scheme] #{@scheme_name}"
+            end
+            return "#{@msg_error}"
+        end
+    end
+
     class InstructionParser
         class << self
             def parse(line)
@@ -420,6 +513,25 @@ module Jumpstarter
                         msg_error, 
                         should_crash
                     )
+                when "xcode"
+                    subcmd = inst_elm[1]
+                    proj_path   = inst_elm[2]
+                    scheme_name = inst_elm[3]
+                    case subcmd
+                    when "duplicate-scheme"
+                        return GITPull.new(
+                            proj_path, 
+                            scheme_name, 
+                        )
+                    when "edit-scheme"
+                        order_hint = inst_elm[4]
+                        return XcodeAddPairToScheme.new(
+                            proj_path, 
+                            scheme_name, 
+                            order_hint,
+                        )
+                    else
+                    end
                 else
                     puts "The command #{cmd} is not supported"
                 end
