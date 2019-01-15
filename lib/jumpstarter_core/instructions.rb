@@ -402,6 +402,7 @@ module Jumpstarter
         def run!()
             existing_scheme = Xcodeproj::XCScheme.shared_data_dir(@proj_path) + "/#{@scheme_name}.xcscheme"
             new_scheme = File.exist?(existing_scheme) ? Xcodeproj::XCScheme.new(existing_scheme) : Xcodeproj::XCScheme.new
+            env_vars = new_scheme::EnvironmentVariables.new
             new_scheme.environment_variables[@key] = @value
             new_scheme.save_as(@proj_path, @scheme_name, @shared)
             return true
