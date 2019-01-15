@@ -401,7 +401,7 @@ module Jumpstarter
 
         def run!()
             new_scheme = Xcodeproj::XCScheme.new()
-            env_vars = new_scheme.EnvironmentVariables.new
+            env_vars = new_scheme::EnvironmentVariables.new
             env_vars[@key] = @value
             new_scheme.save_as(@proj_path, @scheme_name, @shared)
             return true
