@@ -361,9 +361,9 @@ module Jumpstarter
         end
 
         def run!()
+            Dir.chdir "#{@proj_path}"
             scheme_file_path = Dir.glob("./**/#{@scheme_name}")[0]
             filename = File.basename(scheme_file_path, File.extname(scheme_file_path))
-            puts filename
             dir_of_scheme = File.dirname(scheme_file_path)
             File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + filename)
             return true
@@ -401,15 +401,8 @@ module Jumpstarter
         end
 
         def run!()
-            scheme_file_path = Dir.glob("./**/#{@scheme_name}.xcscheme")
-            puts scheme_file_path
             Dir.chdir "#{@proj_path}"
-            scheme_file_path = Dir.glob("./**/#{@scheme_name}.xcscheme")
-            puts scheme_file_path
-            dir_of_scheme = File.dirname(scheme_file_path)
-            File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + scheme_file_path)
-            Dir.chdir "#{@original_dir.chdir}"
-            managment_file_path = Dir.glob("./**/xcschememanagement.plist")
+            managment_file_path = Dir.glob("./**/xcschememanagement.plist")[0]
             file = File.read(managment_file_path)
             xml = Nokogiri::XML(file)
             scheme_state = xml.at('SchemeUserState')
