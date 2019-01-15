@@ -1,16 +1,29 @@
-require_relative './commandRunner'
-require_relative './commands'
 require 'io/console'
 require 'xcodeproj'
 
 module Jumpstarter
 
+    DEFAULTS = {
+        msg_success: 'Success',
+        msg_error:  'Error',
+        should_crash: false,
+    }
+
+    def true?(obj)
+        obj.to_s == "true"
+    end
+
     class I_Instructions
 
-        def initialize(msg_success, msg_error, should_crash)
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
+        def initialize(opts = {})
+            @dec = nil
+            options = DEFAULTS.merge(opts)
+            options.each do |k, v|
+                v = self.clean_value(v)
+                @dec = "#{@dec}\n#{k}: #{v},"
+                instance_variable_set("@#{k}", v)
+                self.class.send(:attr_reader, k)
+            end
         end
 
         def run!()
@@ -18,7 +31,7 @@ module Jumpstarter
         end
 
         def crash_on_error!()
-            return false
+            return @should_crash
         end
 
         def success_message!()
@@ -35,16 +48,27 @@ module Jumpstarter
             return "#{@msg_error}"
         end
 
+        def clean_value(arg)
+            
+            if arg == nil
+                return "''"
+            end
+
+            if  !!arg == arg or (not "#{arg}".match(" "))
+                return arg
+            end
+            
+            return "'#{arg}'"
+        end
+
+        def to_s!()
+            str = "#{self.class}.new(#{@dec.chomp(',')}).run!"
+            return str
+        end
+
     end
 
     class PIPInstall < I_Instructions
-
-        def initialize(pkg, msg_success, msg_error, should_crash)
-            @package = pkg
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
 
         def run!()
             # Check if pip is installed
@@ -61,10 +85,6 @@ module Jumpstarter
                 error: nil
             )
             return true
-        end
-
-        def crash_on_error!()
-            return false
         end
 
         def success_message!()
@@ -86,7 +106,6 @@ module Jumpstarter
     class InstallPIP < I_Instructions
 
         def self.installed!()
-
             # Run version
             version = CommandRunner.execute(
                 command: Commands::Pip::Version, 
@@ -130,21 +149,9 @@ module Jumpstarter
             return true
         end
 
-        def crash_on_error!()
-            return false
-        end
     end
 
     class GITFork < I_Instructions
-
-        def initialize(remote, username, password, msg_success, msg_error, should_crash)
-            @remote = remote
-            @username = username
-            @password = password
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
 
         def run!()
             # Check if git is installed
@@ -164,10 +171,6 @@ module Jumpstarter
             return true
         end
 
-        def crash_on_error!()
-            return false
-        end
-
         def success_message!()
             if not @msg_success or @msg_success.empty?
                 return "[Successfully forked] #{@remote}"
@@ -184,14 +187,6 @@ module Jumpstarter
     end
 
     class GITPull < I_Instructions
-
-        def initialize(remote, branch, msg_success, msg_error, should_crash)
-            @remote = remote
-            @branch = branch
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
 
         def run!()
             # Check if git is installed
@@ -211,10 +206,6 @@ module Jumpstarter
             return true
         end
 
-        def crash_on_error!()
-            return false
-        end
-
         def success_message!()
             if not @msg_success or @msg_success.empty?
                 return "[Successfully pulled] #{@remote}/#{@branch}"
@@ -231,14 +222,6 @@ module Jumpstarter
     end
 
     class GITClone < I_Instructions
-
-        def initialize(remote, username, msg_success, msg_error, should_crash)
-            @remote = remote
-            @username = username
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
 
         def run!()
             # Check if git is installed
@@ -258,10 +241,6 @@ module Jumpstarter
             return true
         end
 
-        def crash_on_error!()
-            return false
-        end
-
         def success_message!()
             if not @msg_success or @msg_success.empty?
                 return "[Successfully pulled] #{@username}/#{@remote}"
@@ -279,68 +258,21 @@ module Jumpstarter
 
     class BashRun < I_Instructions
 
-        def initialize(path, msg_success, msg_error, should_crash)
-            @path = path
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
-
         def run!()
-            CommandRunner.execute(
-                command: "bash #{@path}",
-                error: nil
-            )
+            system(@cmd)
             return true
-        end
-
-        def crash_on_error!()
-            return false
         end
 
         def success_message!()
             if not @msg_success or @msg_success.empty?
-                return "[Successfully Exec] #{@path}"
+                return "[Success] #{@cmd}"
             end
             return "#{@msg_success}"
         end
 
         def error_message!()
             if  not @msg_error or @msg_error.empty?
-                return "[Error exec] #{@path}"
-            end
-            return "#{@msg_error}"
-        end
-    end
-
-    class CDInst < I_Instructions
-
-        def initialize(path, msg_success, msg_error, should_crash)
-            @path = path
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
-
-        def run!()
-            Dir.chdir "#{@path}"
-            return true
-        end
-
-        def crash_on_error!()
-            return false
-        end
-
-        def success_message!()
-            if not @msg_success or @msg_success.empty?
-                return "[Successfully moved to] #{@path}"
-            end
-            return "#{@msg_success}"
-        end
-
-        def error_message!()
-            if  not @msg_error or @msg_error.empty?
-                return "[Error moving to] #{@path}"
+                return "[Error] #{@cmd}"
             end
             return "#{@msg_error}"
         end
@@ -351,23 +283,10 @@ module Jumpstarter
     #############################
     class XcodeCreateScheme < I_Instructions
 
-        def initialize(proj_path, scheme_name, shared = false, msg_success = nil, msg_error = nil, should_crash = false)
-            @proj_path = proj_path
-            @scheme_name = scheme_name
-            @shared = shared
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-        end
-
         def run!()
             new_scheme = Xcodeproj::XCScheme.new()
             new_scheme.save_as(@proj_path, @scheme_name, @shared)
             return true
-        end
-
-        def crash_on_error!()
-            return false
         end
 
         def success_message!()
@@ -385,31 +304,14 @@ module Jumpstarter
         end
     end
 
-    class XcodeAddPairToScheme < I_Instructions
-
-        def initialize(proj_path, scheme_name, shared = false, key, value,  msg_success, msg_error, should_crash)
-            @proj_path = proj_path
-            @scheme_name = scheme_name
-            @msg_success = msg_success
-            @msg_error = msg_error
-            @should_crash = should_crash
-            @shared = shared
-            @key = key
-            @value = value
-
-        end
+    class XcodeDuplicateScheme < I_Instructions
 
         def run!()
-            existing_scheme = Xcodeproj::XCScheme.shared_data_dir(@proj_path) + "/#{@scheme_name}.xcscheme"
-            new_scheme = File.exist?(existing_scheme) ? Xcodeproj::XCScheme.new(existing_scheme) : Xcodeproj::XCScheme.new
-            env_vars = new_scheme.EnvironmentVariables.new
-            new_scheme.environment_variables[@key] = @value
-            new_scheme.save_as(@proj_path, @scheme_name, @shared)
+            existing_scheme_path = @original_shared ? Xcodeproj::XCScheme.shared_data_dir(@proj_path) : Xcodeproj::XCScheme.user_data_dir(@proj_path)
+            existing_scheme = "#{existing_scheme_path}/#{@original_scheme_name}.xcscheme"
+            new_scheme = Xcodeproj::XCScheme.new(existing_scheme)
+            new_scheme.save_as(@proj_path, @new_scheme_name, @new_shared)
             return true
-        end
-
-        def crash_on_error!()
-            return false
         end
 
         def success_message!()
@@ -422,6 +324,38 @@ module Jumpstarter
         def error_message!()
             if  not @msg_error or @msg_error.empty?
                 return "[Failed to duplicate scheme] #{@scheme_name}"
+            end
+            return "#{@msg_error}"
+        end
+    end
+
+    class XcodeEditSchemeEnvVars < I_Instructions
+
+        def run!()
+            existing_scheme_path = @shared ? Xcodeproj::XCScheme.shared_data_dir(@proj_path) : Xcodeproj::XCScheme.user_data_dir(@proj_path)
+            existing_scheme = "#{existing_scheme_path}/#{@scheme_name}.xcscheme"
+            scheme = Xcodeproj::XCScheme.new(existing_scheme)
+            environment_variables = scheme.launch_action.environment_variables
+            environment_variables.assign_variable(:key => @key, :value => @value) 
+            scheme.launch_action.environment_variables = environment_variables
+            scheme.save!
+            return true
+        end
+
+        def crash_on_error!()
+            return false
+        end
+
+        def success_message!()
+            if not @msg_success or @msg_success.empty?
+                return "[Successfully edited scheme] #{@scheme_name}"
+            end
+            return "#{@msg_success}"
+        end
+
+        def error_message!()
+            if  not @msg_error or @msg_error.empty?
+                return "[Failed to edit scheme] #{@scheme_name}"
             end
             return "#{@msg_error}"
         end
@@ -429,24 +363,28 @@ module Jumpstarter
 
     class InstructionParser
         class << self
+            def get_args(line)
+                return Hash[line.scan(/--?([^=\s]+)(?:=(\S+))?/)]
+            end
             def parse(line)
                 inst_elm = line.split
                 cmd = inst_elm[0]
+                args = InstructionParser.get_args(line)
+                msg_success = args["msg_success"]
+                msg_error = args["msg_error"]
+                should_crash = args["should_crash"]
                 case cmd
                 when "pip"
                     package = inst_elm[1]
-                    msg_success = inst_elm[2] if inst_elm[2]
-                    msg_error =  inst_elm[3] if inst_elm[3]
-                    should_crash = inst_elm[4] == "true" if inst_elm[4]
                     return PIPInstall.new(
-                        package, 
-                        msg_success, 
-                        msg_error, 
-                        should_crash
-                    )
+                        package: package, 
+                        msg_success: msg_success, 
+                        msg_error: msg_error, 
+                        should_crash: should_crash
+                    ).to_s!
                 when "git"
                     subcmd = inst_elm[1]
-                    remote = inst_elm[2]
+                    remote = inst_elm[2] 
                     branch = inst_elm[3] if inst_elm[3]
                     case subcmd
                     when "fork"
@@ -454,92 +392,83 @@ module Jumpstarter
                         username = STDIN.gets.chomp
                         password = STDIN.getpass("Password: ")
                         return GITFork.new(
-                            remote, 
-                            username, 
-                            password, 
-                            msg_success, 
-                            msg_error, 
-                            should_crash
-                        )
+                            remote: remote, 
+                            username: username, 
+                            password: password, 
+                            msg_success: msg_success, 
+                            msg_error: msg_error, 
+                            should_crash: should_crash
+                        ).to_s!
                     when "pull"
                         return GITPull.new(
-                            remote, 
-                            branch, 
-                            msg_success, 
-                            msg_error, 
-                            should_crash
-                        )
+                            remote: remote, 
+                            branch: branch, 
+                            msg_success: msg_success, 
+                            msg_error: msg_error, 
+                            should_crash: should_crash
+                        ).to_s!
                     when "clone"
                         puts "github username: "
                         username = STDIN.gets.chomp
                         return GITClone.new(
-                            remote, 
-                            username, 
-                            msg_success, 
-                            msg_error, 
-                            should_crash
-                        )
+                            remote: remote, 
+                            username: username, 
+                            msg_success: msg_success, 
+                            msg_error: msg_error, 
+                            should_crash: should_crash
+                        ).to_s!
                     else
                     end
                 when "bash"
-                    subcmd = inst_elm[1]
-                    path = inst_elm[2]
-                    case subcmd
-                    when "run"
-                        return BashRun.new(
-                            path, 
-                            msg_success, 
-                            msg_error, 
-                            should_crash
-                        )
-                    else
-                    end
-                when "cd"
-                    path = inst_elm[1]
-                    return CDInst.new(
-                        path, 
-                        msg_success, 
-                        msg_error, 
-                        should_crash
-                    )
+                    return BashRun.new(
+                        cmd: args["cmd"], 
+                        msg_success: msg_success, 
+                        msg_error: msg_error, 
+                        should_crash: should_crash
+                    ).to_s!
                 when "xcode"
                     subcmd = inst_elm[1]
-                    proj_path   = inst_elm[2]
-                    scheme_name = inst_elm[3]
-                    shared = inst_elm[4]
                     case subcmd
-                    when "duplicate-scheme"
-                        msg_success = inst_elm[5] if inst_elm[5]
-                        msg_error =  inst_elm[6] if inst_elm[6]
-                        should_crash = inst_elm[7] == "true" if inst_elm[7]
-                        return XcodeCreateScheme.new(
-                            proj_path, 
-                            scheme_name,
-                            shared,
-                            msg_success,
-                            msg_error,
-                            should_crash,
-                        )
-                    when "edit-scheme"
-                        key = inst_elm[5]
-                        value = inst_elm[6]
-                        msg_success = inst_elm[7] if inst_elm[7]
-                        msg_error =  inst_elm[8] if inst_elm[8]
-                        should_crash = inst_elm[9] == "true" if inst_elm[9]
-                        return XcodeAddPairToScheme.new(
-                            proj_path, 
-                            scheme_name, 
-                            shared,
-                            key,
-                            value,
-                            msg_success,
-                            msg_error,
-                            should_crash,
-                        )
+                    when "scheme"
+                        action = args["action"]
+                        case action
+                        when "edit"
+                            return XcodeEditSchemeEnvVars.new(
+                                    proj_path: args["path"],
+                                    scheme_name: args["scheme_name"], 
+                                    shared: args["shared"],
+                                    key: args["env_var_key"],
+                                    value: args["env_var_val"],
+                                    msg_success: msg_success,
+                                    msg_error: msg_error,
+                                    should_crash: should_crash
+                            ).to_s!
+                        when "duplicate"
+                            return XcodeDuplicateScheme.new(
+                                    proj_path: args["path"],
+                                    original_scheme_name: args["original_scheme_name"], 
+                                    new_scheme_name: args["new_scheme_name"], 
+                                    original_shared: args["original_shared"],
+                                    new_shared: args["new_shared"],
+                                    msg_success: msg_success,
+                                    msg_error: msg_error,
+                                    should_crash: should_crash
+                            ).to_s!
+                        when "create"
+                            return XcodeCreateScheme.new(
+                                    proj_path: args["path"],
+                                    scheme_name: args["scheme_name"], 
+                                    shared: args["shared"],
+                                    msg_success: msg_success,
+                                    msg_error: msg_error,
+                                    should_crash: should_crash
+                            ).to_s!
+                        else
+                        end
                     else
                     end
                 else
-                    puts "The command #{cmd} is not supported"
+                    return "#{line}"
                 end
             end
         end

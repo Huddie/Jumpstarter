@@ -1,5 +1,3 @@
-require_relative './OS'
-
 module Jumpstarter
     class Commands
         class Pip
