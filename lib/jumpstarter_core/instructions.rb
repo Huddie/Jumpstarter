@@ -524,7 +524,10 @@ module Jumpstarter
                         should_crash = inst_elm[6] == "true" if inst_elm[6]
                         return XcodeDuplicateScheme.new(
                             proj_path, 
-                            scheme_name, 
+                            scheme_name,
+                            msg_success,
+                            msg_error,
+                            should_crash,
                         )
                     when "edit-scheme"
                         order_hint = inst_elm[4]
@@ -535,6 +538,9 @@ module Jumpstarter
                             proj_path, 
                             scheme_name, 
                             order_hint,
+                            msg_success,
+                            msg_error,
+                            should_crash,
                         )
                     else
                     end
