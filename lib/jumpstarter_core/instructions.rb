@@ -361,7 +361,7 @@ module Jumpstarter
         end
 
         def run!()
-            new_scheme = Xcodeproj::XCScheme()
+            new_scheme = Xcodeproj::Scheme()
             new_scheme.save_as(@proj_path, @scheme_name)
             return true
         end
@@ -398,7 +398,7 @@ module Jumpstarter
         end
 
         def run!()
-            new_scheme = Xcodeproj::Scheme()
+            new_scheme = Xcodeproj::XCScheme.new()
             new_scheme.save_as(@proj_path, @scheme_name)
             return true
         end
