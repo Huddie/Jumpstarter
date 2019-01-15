@@ -529,6 +529,8 @@ module Jumpstarter
                             proj_path, 
                             scheme_name, 
                             shared,
+                            key,
+                            value,
                             msg_success,
                             msg_error,
                             should_crash,
