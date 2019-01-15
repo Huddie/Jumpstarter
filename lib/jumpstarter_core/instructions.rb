@@ -362,7 +362,7 @@ module Jumpstarter
 
         def run!()
             scheme_file_path = Dir.glob("./**/#{@scheme_name}")[0]
-            filename = File.basename(scheme_file_path, File.extname(f))
+            filename = File.basename(scheme_file_path, File.extname(scheme_file_path))
             puts filename
             dir_of_scheme = File.dirname(scheme_file_path)
             File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + filename)
