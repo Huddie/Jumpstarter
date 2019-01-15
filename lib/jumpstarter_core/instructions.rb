@@ -519,7 +519,7 @@ module Jumpstarter
                     scheme_name = inst_elm[3]
                     case subcmd
                     when "duplicate-scheme"
-                        return GITPull.new(
+                        return XcodeDuplicateScheme.new(
                             proj_path, 
                             scheme_name, 
                         )
