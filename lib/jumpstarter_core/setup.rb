@@ -59,7 +59,6 @@ module Jumpstarter
                         cmd_file = "#{cmd_file}\n#{inst}"
                     end
                 end
-                puts cmd_file
                 eval(cmd_file)
             end
         end
