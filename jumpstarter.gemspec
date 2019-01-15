@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'commander'
   spec.add_dependency 'colorize'
-  spec.add_dependency 'nokogiri'
+  spec.add_dependency 'xcodeproj'
 
 
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})

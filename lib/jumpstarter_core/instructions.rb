@@ -1,7 +1,7 @@
 require_relative './commandRunner'
 require_relative './commands'
 require 'io/console'
-require 'nokogiri'
+require 'xcodeproj'
 
 module Jumpstarter
 
@@ -349,7 +349,7 @@ module Jumpstarter
     #############################
     ###  xcode instructions   ###
     #############################
-    class XcodeDuplicateScheme < I_Instructions
+    class XcodeCreateScheme < I_Instructions
 
         def initialize(proj_path, scheme_name, msg_success, msg_error, should_crash)
             @proj_path = proj_path
@@ -361,11 +361,8 @@ module Jumpstarter
         end
 
         def run!()
-            Dir.chdir "#{@proj_path}"
-            scheme_file_path = Dir.glob("./**/#{@scheme_name}")[0]
-            filename = File.basename(scheme_file_path, File.extname(scheme_file_path))
-            dir_of_scheme = File.dirname(scheme_file_path)
-            File.rename(scheme_file_path, dir_of_scheme + File::SEPARATOR + "Copy of " + filename)
+            new_scheme = Xcodeproj::XCScheme()
+            new_scheme.save_as(@proj_path, @scheme_name)
             return true
         end
 
@@ -401,18 +398,8 @@ module Jumpstarter
         end
 
         def run!()
-            Dir.chdir "#{@proj_path}"
-            managment_file_path = Dir.glob("./**/xcschememanagement.plist")[0]
-            file = File.read(managment_file_path)
-            xml = Nokogiri::XML(file)
-            scheme_state = xml.at('SchemeUserState')
-            node = "<key>Copy of #{@scheme_name}.xcscheme</key>
-                    <dict>
-                        <key>orderHint</key>
-                        <integer>3</integer>
-                    </dict>"
-            scheme_state.add_child(Nokogiri::XML::Node.new(node, xml))
-            puts xml
+            new_scheme = Xcodeproj::XCScheme()
+            new_scheme.save_as(@proj_path, @scheme_name)
             return true
         end
 
@@ -519,7 +506,7 @@ module Jumpstarter
                         msg_success = inst_elm[4] if inst_elm[4]
                         msg_error =  inst_elm[5] if inst_elm[5]
                         should_crash = inst_elm[6] == "true" if inst_elm[6]
-                        return XcodeDuplicateScheme.new(
+                        return XcodeCreateScheme.new(
                             proj_path, 
                             scheme_name,
                             msg_success,
