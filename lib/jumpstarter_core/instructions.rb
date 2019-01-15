@@ -519,12 +519,18 @@ module Jumpstarter
                     scheme_name = inst_elm[3]
                     case subcmd
                     when "duplicate-scheme"
+                        msg_success = inst_elm[4] if inst_elm[4]
+                        msg_error =  inst_elm[5] if inst_elm[5]
+                        should_crash = inst_elm[6] == "true" if inst_elm[6]
                         return XcodeDuplicateScheme.new(
                             proj_path, 
                             scheme_name, 
                         )
                     when "edit-scheme"
                         order_hint = inst_elm[4]
+                        msg_success = inst_elm[5] if inst_elm[5]
+                        msg_error =  inst_elm[6] if inst_elm[6]
+                        should_crash = inst_elm[7] == "true" if inst_elm[7]
                         return XcodeAddPairToScheme.new(
                             proj_path, 
                             scheme_name, 
