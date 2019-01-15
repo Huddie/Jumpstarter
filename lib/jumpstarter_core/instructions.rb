@@ -351,18 +351,18 @@ module Jumpstarter
     #############################
     class XcodeCreateScheme < I_Instructions
 
-        def initialize(proj_path, scheme_name, msg_success, msg_error, should_crash)
+        def initialize(proj_path, scheme_name, shared = false, msg_success = nil, msg_error = nil, should_crash = false)
             @proj_path = proj_path
             @scheme_name = scheme_name
+            @shared = shared
             @msg_success = msg_success
             @msg_error = msg_error
             @should_crash = should_crash
-            @original_dir = Dir.pwd
         end
 
         def run!()
             new_scheme = Xcodeproj::XCScheme.new()
-            new_scheme.save_as(@proj_path, @scheme_name)
+            new_scheme.save_as(@proj_path, @scheme_name, @shared)
             return true
         end
 
@@ -387,19 +387,23 @@ module Jumpstarter
 
     class XcodeAddPairToScheme < I_Instructions
 
-        def initialize(proj_path, scheme_name, order_hint, msg_success, msg_error, should_crash)
+        def initialize(proj_path, scheme_name, shared = false, key, value,  msg_success, msg_error, should_crash)
             @proj_path = proj_path
             @scheme_name = scheme_name
             @msg_success = msg_success
             @msg_error = msg_error
             @should_crash = should_crash
-            @original_dir = Dir.pwd
-            @order_hont = order_hint
+            @shared = shared
+            @key = key
+            @value = value
+
         end
 
         def run!()
             new_scheme = Xcodeproj::XCScheme.new()
-            new_scheme.save_as(@proj_path, @scheme_name)
+            env_vars = new_scheme.EnvironmentVariables.new
+            env_vars[@key] = @value
+            new_scheme.save_as(@proj_path, @scheme_name @shared)
             return true
         end
 
@@ -501,27 +505,30 @@ module Jumpstarter
                     subcmd = inst_elm[1]
                     proj_path   = inst_elm[2]
                     scheme_name = inst_elm[3]
+                    shared = inst_elm[4]
                     case subcmd
                     when "duplicate-scheme"
-                        msg_success = inst_elm[4] if inst_elm[4]
-                        msg_error =  inst_elm[5] if inst_elm[5]
-                        should_crash = inst_elm[6] == "true" if inst_elm[6]
+                        msg_success = inst_elm[5] if inst_elm[5]
+                        msg_error =  inst_elm[6] if inst_elm[6]
+                        should_crash = inst_elm[7] == "true" if inst_elm[7]
                         return XcodeCreateScheme.new(
                             proj_path, 
                             scheme_name,
+                            shared,
                             msg_success,
                             msg_error,
                             should_crash,
                         )
                     when "edit-scheme"
-                        order_hint = inst_elm[4]
-                        msg_success = inst_elm[5] if inst_elm[5]
-                        msg_error =  inst_elm[6] if inst_elm[6]
-                        should_crash = inst_elm[7] == "true" if inst_elm[7]
+                        key = inst_elm[5]
+                        value = inst_elm[6]
+                        msg_success = inst_elm[7] if inst_elm[7]
+                        msg_error =  inst_elm[8] if inst_elm[8]
+                        should_crash = inst_elm[9] == "true" if inst_elm[9]
                         return XcodeAddPairToScheme.new(
                             proj_path, 
                             scheme_name, 
-                            order_hint,
+                            shared,
                             msg_success,
                             msg_error,
                             should_crash,
