@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'commander'
   spec.add_dependency 'colorize'
   spec.add_dependency 'xcodeproj'
+  spec.add_dependency 'terminal-table'
 
 
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})

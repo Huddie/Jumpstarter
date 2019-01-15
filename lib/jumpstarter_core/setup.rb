@@ -1,10 +1,21 @@
 require_relative './instructions'
+require 'terminal-table'
 
 module Jumpstarter
     class Setup
         class << self 
 
             FILE = 'Starter'
+
+            def options(ops)
+                rows = []
+                c = 1
+                ops.each do |v|
+                    rows << [v, c]
+                    c = c + 1
+                end
+                return Terminal::Table.new :rows => rows
+            end
 
             def setup!()
                 ## Find path to maintainfile
@@ -13,6 +24,14 @@ module Jumpstarter
                     puts "Found Setup file at #{path[0]}"
                     proccess_file(path[0])
                 end
+
+                puts "We found multiple Starter files in this directory tree"
+                puts "Please select the one you want to use by typing the number that corrisponds to that file below"
+                puts options(path)
+                puts "Choose file #"
+                num = (STDIN.gets.chomp).to_i
+                
+                proccess_file(path[num])
             end
 
             def parse_into_inst(line)
@@ -24,6 +43,7 @@ module Jumpstarter
                 result = inst.run!
                 return result
             end
+
             def fill_with_inst!()
                 text = ""
                 File.open(__dir__ + '/instructions.rb', "r") do |f|
@@ -60,6 +80,9 @@ module Jumpstarter
                     end
                 end
                 eval(cmd_file)
+                # File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
+                # system("ruby Starter.rb")
+                # File.delete("Starter.rb")
             end
         end
     end
