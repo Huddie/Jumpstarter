@@ -9,7 +9,7 @@ module Jumpstarter
 
             def options(ops)
                 rows = []
-                c = 1
+                c = 0
                 ops.each do |v|
                     rows << [v, c]
                     c = c + 1
@@ -20,18 +20,19 @@ module Jumpstarter
             def setup!()
                 ## Find path to maintainfile
                 path = Dir.glob("./**/#{FILE}")
+                puts path.length
                 if path.length == 1
                     puts "Found Setup file at #{path[0]}"
                     proccess_file(path[0])
-                end
+                else
+                    puts "We found multiple Starter files in this directory tree"
+                    puts "Please select the one you want to use by typing the number that corrisponds to that file below"
+                    puts options(path)
+                    puts "Choose file #"
+                    num = (STDIN.gets.chomp).to_i
 
-                puts "We found multiple Starter files in this directory tree"
-                puts "Please select the one you want to use by typing the number that corrisponds to that file below"
-                puts options(path)
-                puts "Choose file #"
-                num = (STDIN.gets.chomp).to_i
-                
-                proccess_file(path[num])
+                    proccess_file(path[num])
+                end
             end
 
             def parse_into_inst(line)
@@ -46,29 +47,16 @@ module Jumpstarter
 
             def fill_with_inst!()
                 text = ""
-                File.open(__dir__ + '/instructions.rb', "r") do |f|
-                    f.each_line do |line|
-                        text = "#{text}#{line}"
+                rel_files = ["instructions.rb", "commands.rb", "commandRunner.rb" ,"OS.rb", "xcode_helper.rb"]
+                rel_files.each do |f|
+                    File.open(__dir__ + "/#{f}", "r") do |f|
+                        f.each_line do |line|
+                            text = "#{text}#{line}"
+                        end
                     end
+                    text = "#{text}\n"
                 end
-                text = "#{text}\n"
-                File.open(__dir__ + '/commands.rb', "r") do |f|
-                    f.each_line do |line|
-                        text = "#{text}#{line}"
-                    end
-                end
-                text = "#{text}\n"
-                File.open(__dir__ + '/commandRunner.rb', "r") do |f|
-                    f.each_line do |line|
-                        text = "#{text}#{line}"
-                    end
-                end
-                text = "#{text}\n"
-                File.open(__dir__ + '/OS.rb', "r") do |f|
-                    f.each_line do |line|
-                        text = "#{text}#{line}"
-                    end
-                end
+
                 return text
             end 
             def proccess_file(path)

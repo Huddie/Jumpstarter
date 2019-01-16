@@ -1,5 +1,7 @@
 require 'io/console'
 require 'xcodeproj'
+require 'plist'
+require 'terminal-table'
 
 module Jumpstarter
 
@@ -66,6 +68,16 @@ module Jumpstarter
             return str
         end
 
+        def options(ops)
+            rows = []
+            c = 0
+            ops.each do |v|
+                rows << [v, c]
+                c = c + 1
+            end
+            return Terminal::Table.new :rows => rows
+        end
+
     end
 
     class PIPInstall < I_Instructions
@@ -100,6 +112,7 @@ module Jumpstarter
             end
             return "#{@msg_error}"
         end
+
     end
 
     
@@ -232,7 +245,6 @@ module Jumpstarter
                     error: nil
                 )
             end
-
             # clone
             CommandRunner.execute(
                 command: "git clone https://github.com/#{@username}/#{@remote}.git",
@@ -361,15 +373,79 @@ module Jumpstarter
         end
     end
 
+    class XcodeEditTargetBundleID < I_Instructions
+
+        def run!()
+            project = Xcodeproj::Project.open(@proj_path)
+
+            unless project.root_object.attributes["TargetAttributes"]
+                puts "Your file format is old, please update and try again"
+            return false
+            end
+    
+            target_dictionary = project.targets.map { |f| { name: f.name, uuid: f.uuid, build_configuration_list: f.build_configuration_list } }
+            changed_targets = []
+            project.root_object.attributes["TargetAttributes"].each do |target, sett|
+                found_target = target_dictionary.detect { |h| h[:uuid] == target }
+                style_value = @code_sign_style == "manual" ? 'Manual' : 'Automatic'
+                build_configuration_list = found_target[:build_configuration_list]
+                build_configuration_list.set_setting("CODE_SIGN_STYLE", style_value)
+                sett["ProvisioningStyle"] = style_value
+        
+                if not @team_id.empty?
+                    sett["DevelopmentTeam"] = @team_id
+                    build_configuration_list.set_setting("DEVELOPMENT_TEAM",  @team_id)
+                else 
+                    teams = Jumpstarter::XCHelper.teams!
+                    puts "Provisioning Profile"
+                    puts options(teams)
+                    print "Please select the team for #{found_target[:name]}: "
+                    num = (STDIN.gets.chomp).to_i
+                    team = teams[num]
+                    build_configuration_list.set_setting("DEVELOPMENT_TEAM",  team)
+                end
+                if @code_siging_identity
+                    build_configuration_list.set_setting("CODE_SIGN_IDENTITY", @code_siging_identity)
+                end
+                if @bundle_id
+                    build_configuration_list.set_setting("PRODUCT_BUNDLE_IDENTIFIER", @bundle_id)
+                end
+                changed_targets << found_target[:name]
+            end
+            project.save
+    
+            changed_targets.each do |target|
+                puts "Updated Target: #{target}"
+            end
+
+            return true
+        end
+
+        def success_message!()
+            if not @msg_success or @msg_success.empty?
+                return "[Successfully edited bundle]"
+            end
+            return "#{@msg_success}"
+        end
+
+        def error_message!()
+            if  not @msg_error or @msg_error.empty?
+                return "[Failed to edit bundle]"
+            end
+            return "#{@msg_error}"
+        end
+    end
+
     class InstructionParser
         class << self
             def get_args(line)
-                return Hash[line.scan(/--?([^=\s]+)(?:=(\S+))?/)]
+                return Hash[line.scan(/--?([^=\s]+)(?:=(\"[^\"]+\"|\S+))?/)]
             end
             def parse(line)
                 inst_elm = line.split
                 cmd = inst_elm[0]
                 args = InstructionParser.get_args(line)
+                puts args
                 msg_success = args["msg_success"]
                 msg_error = args["msg_error"]
                 should_crash = args["should_crash"]
@@ -388,7 +464,7 @@ module Jumpstarter
                     branch = inst_elm[3] if inst_elm[3]
                     case subcmd
                     when "fork"
-                        puts "github username: "
+                        print "github username: "
                         username = STDIN.gets.chomp
                         password = STDIN.getpass("Password: ")
                         return GITFork.new(
@@ -459,6 +535,22 @@ module Jumpstarter
                                     proj_path: args["path"],
                                     scheme_name: args["scheme_name"], 
                                     shared: args["shared"],
+                                    msg_success: msg_success,
+                                    msg_error: msg_error,
+                                    should_crash: should_crash
+                            ).to_s!
+                        else
+                        end
+                    when "target"
+                        action = args["action"]
+                        case action
+                        when "edit"
+                            puts args["team_id"]
+                            return XcodeEditTargetBundleID.new(
+                                    proj_path: args["path"],
+                                    bundle_id: args["bundle_id"],
+                                    team_id: args["team_id"],
+                                    code_siging_identity: args["code_siging_identity"],
                                     msg_success: msg_success,
                                     msg_error: msg_error,
                                     should_crash: should_crash

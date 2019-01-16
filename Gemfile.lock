@@ -4,6 +4,7 @@ PATH
     jump-starter (1.1.18)
       colorize
       commander
+      terminal-table
       xcodeproj
 
 GEM
@@ -33,6 +34,9 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
     rspec-support (3.8.0)
+    terminal-table (1.8.0)
+      unicode-display_width (~> 1.1, >= 1.1.1)
+    unicode-display_width (1.4.0)
     xcodeproj (1.7.0)
       CFPropertyList (>= 2.3.3, < 4.0)
       atomos (~> 0.1.3)
