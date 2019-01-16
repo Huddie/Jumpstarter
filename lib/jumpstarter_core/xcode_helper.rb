@@ -21,6 +21,20 @@
                     end
                     return teams
                 end
+                def update_targets_plist_ids(project, bundleName)
+                    target = project.targets.first
+                    files = target.source_build_phase.files.to_a.map do |pbx_build_file|
+                        pbx_build_file.file_ref.real_path.to_s
+                    end.select do |path|
+                        path.end_with?(".plist")
+                    end.select do |path|
+                        File.exists?(path)
+                    end
+                    files.each do |f|
+                        profile_plist = Plist.parse_xml(f)
+                        current = profile_plist['NSExtension']['NSExtensionAttributes']['WKAppBundleIdentifier'] 
+                    end
+                end
             end
         end
     end

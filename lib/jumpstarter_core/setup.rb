@@ -1,12 +1,11 @@
 require_relative './instructions'
+require_relative './parser'
 require 'terminal-table'
 
 module Jumpstarter
+    FILE = 'Starter'
     class Setup
         class << self 
-
-            FILE = 'Starter'
-
             def options(ops)
                 rows = []
                 c = 0
@@ -19,7 +18,7 @@ module Jumpstarter
 
             def setup!()
                 ## Find path to maintainfile
-                path = Dir.glob("./**/#{FILE}")
+                path = Dir.glob("./**/#{Jumpstarter::FILE}")
                 puts path.length
                 if path.length == 1
                     puts "Found Setup file at #{path[0]}"
@@ -47,7 +46,18 @@ module Jumpstarter
 
             def fill_with_inst!()
                 text = ""
-                rel_files = ["instructions.rb", "commands.rb", "commandRunner.rb" ,"OS.rb", "xcode_helper.rb"]
+                rel_files = [
+                    "instructions.rb", 
+                    "commands.rb", 
+                    "commandRunner.rb",
+                    "OS.rb", 
+                    "xcode_helper.rb", 
+                    "Writer.rb", 
+                    "git.rb", 
+                    "bash.rb", 
+                    "xcode.rb", 
+                    "pip.rb"
+                ]
                 rel_files.each do |f|
                     File.open(__dir__ + "/#{f}", "r") do |f|
                         f.each_line do |line|
@@ -67,9 +77,9 @@ module Jumpstarter
                         cmd_file = "#{cmd_file}\n#{inst}"
                     end
                 end
-                eval(cmd_file)
-                # File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
-                # system("ruby Starter.rb")
+                #eval(cmd_file)
+                File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
+                system("ruby Starter.rb")
                 # File.delete("Starter.rb")
             end
         end
