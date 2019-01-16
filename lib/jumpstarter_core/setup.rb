@@ -25,7 +25,6 @@ module Jumpstarter
                 if path.length == 1
                     puts "Found Setup file at #{path[0]}"
                     file_path = path[0]
-                    proccess_file(path[0])
                 else
                     puts "We found multiple Starter files in this directory tree"
                     puts "Please select the one you want to use by typing the number that corrisponds to that file below"

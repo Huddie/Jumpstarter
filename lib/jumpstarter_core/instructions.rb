@@ -66,9 +66,9 @@ module Jumpstarter
             str = "_inst_ret = #{self.class}.new(#{@dec.chomp(',')}".chomp()
             str = "#{str}\n).run!"
             str = "#{str}\nif _inst_ret"
-            str = "#{str}\n\tJumpstarter::Writer.show_success(message: self.success_message!)"
+            str = "#{str}\n\tJumpstarter::Writer.show_success(message: #{self.success_message!})"
             str = "#{str}\nelse"
-            str = "#{str}\n\tJumpstarter::Writer.show_error(message: self.success_message!)"
+            str = "#{str}\n\tJumpstarter::Writer.show_error(message: #{self.error_message!})"
             str = "#{str}\nend"
             return str
         end
