@@ -6,6 +6,8 @@ module Jumpstarter
     FILE = 'Starter'
     class Setup
         class << self 
+
+            ## HELPER METHOD
             def options(ops)
                 rows = []
                 c = 0
@@ -16,12 +18,13 @@ module Jumpstarter
                 return Terminal::Table.new :rows => rows
             end
 
-            def setup!()
-                ## Find path to maintainfile
+            def find!()
+                ## Find path to Starter file
+                file_path = ""
                 path = Dir.glob("./**/#{Jumpstarter::FILE}")
-                puts path.length
                 if path.length == 1
                     puts "Found Setup file at #{path[0]}"
+                    file_path = path[0]
                     proccess_file(path[0])
                 else
                     puts "We found multiple Starter files in this directory tree"
@@ -29,9 +32,11 @@ module Jumpstarter
                     puts options(path)
                     puts "Choose file #"
                     num = (STDIN.gets.chomp).to_i
-
-                    proccess_file(path[num])
+                    file_path = path[num]
                 end
+                return file_path
+            def setup!()
+                proccess_file(Setup.find!)
             end
 
             def parse_into_inst(line)
@@ -70,6 +75,7 @@ module Jumpstarter
                 return text
             end 
             def proccess_file(path)
+                puts "Processing file #{path}"
                 cmd_file = fill_with_inst!
                 File.open(path, "r") do |f|
                     f.each_line do |line|
@@ -77,10 +83,13 @@ module Jumpstarter
                         cmd_file = "#{cmd_file}\n#{inst}"
                     end
                 end
-                #eval(cmd_file)
-                File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
-                system("ruby Starter.rb")
+                Setup.eval_file(cmd_file)
+                # File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
+                # system("ruby Starter.rb")
                 # File.delete("Starter.rb")
+            end
+            def eval_file(file_text)
+                eval(cmd_file)
             end
         end
     end

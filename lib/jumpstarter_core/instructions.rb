@@ -3,11 +3,18 @@ require 'xcodeproj'
 require 'plist'
 require 'terminal-table'
 module Jumpstarter
+
     DEFAULTS = {
         msg_success: 'Success',
         msg_error:  'Error',
         should_crash: false,
     }
+
+    # I_Instrcutions
+    # This is an abstract class. And should not be init.
+    # This lays out the blueprint for all instructions
+    # The only method that must be overwritten is the run!
+    # method.
     class I_Instructions
         def initialize(opts = {})
             @dec = nil

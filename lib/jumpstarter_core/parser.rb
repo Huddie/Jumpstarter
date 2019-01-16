@@ -6,16 +6,39 @@ require_relative './xcode'
 module Jumpstarter
     class InstructionParser
         class << self
+
+            # Gets the arguments of a line
+            # --foo = variable/boolean/number
+            # --"foo" = String
+            # --"foo bar baz" = String
             def get_args(line)
                 return Hash[line.scan(/--?([^=\s]+)(?:=(\"[^\"]+\"|\S+))?/)]
             end
+
+            # Parse each line individually
+            # If the command is recognized, create the corrisponding
+            # instruction class and call `compose!` on it
+            # 
+            # `compose!` returns a string that is valid
+            # ruby code and can such be run 
             def parse(line)
+
                 inst_elm = line.split
+
+                ## Read the command
                 cmd = inst_elm[0]
+
+                ## Parse the arguments
                 args = InstructionParser.get_args(line)
+
+                ## Arguments that apply to all commands
                 msg_success = args["msg_success"]
                 msg_error = args["msg_error"]
                 should_crash = args["should_crash"]
+
+                # Switch over the command finding the appropiate
+                # instruction. Once found, process the remaining
+                # inst_elm or args and feed them into the class
                 case cmd
                 when "pip"
                     package = inst_elm[1]
@@ -115,7 +138,6 @@ module Jumpstarter
                         action = args["action"]
                         case action
                         when "edit"
-                            puts args["team_id"]
                             return Jumpstarter::Xcode::EditTargetBundleID.new(
                                     proj_path: args["path"],
                                     bundle_id: args["bundle_id"],
@@ -130,6 +152,9 @@ module Jumpstarter
                     else
                     end
                 else
+                    # In a case where the command is not understood
+                    # assume the line is a ruby line and simply return
+                    # that line to the starter.rb file to run normally
                     return "#{line}"
                 end
             end
