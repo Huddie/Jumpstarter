@@ -35,6 +35,7 @@ module Jumpstarter
                     file_path = path[num]
                 end
                 return file_path
+            end
             def setup!()
                 proccess_file(Setup.find!)
             end
@@ -83,9 +84,9 @@ module Jumpstarter
                         cmd_file = "#{cmd_file}\n#{inst}"
                     end
                 end
-                Setup.eval_file(cmd_file)
-                # File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
-                # system("ruby Starter.rb")
+                # Setup.eval_file(cmd_file)
+                File.open("Starter.rb", 'w') { |file| file.write(cmd_file) }
+                system("ruby Starter.rb")
                 # File.delete("Starter.rb")
             end
             def eval_file(file_text)

@@ -21,7 +21,7 @@ module Jumpstarter
             options = DEFAULTS.merge(opts)
             options.each do |k, v|
                 v = self.clean_value(v)
-                @dec = "#{@dec}\n#{k}: #{v},"
+                @dec = "#{@dec}\n\t#{k}: #{v},"
                 instance_variable_set("@#{k}", v)
                 self.class.send(:attr_reader, k)
             end
@@ -36,17 +36,21 @@ module Jumpstarter
         end
 
         def success_message!()
+            message = ""
             if not @msg_success or @msg_success.empty?
-                return "[Success]"
+                message = "[Success]"
             end
-            return "#{@msg_success}"
+            message = @msg_success
+            return message       
         end
 
         def error_message!()
+            message = ""
             if  not @msg_error or @msg_error.empty?
-                return "[Error]"
+                message "[Error]"
             end
-            return "#{@msg_error}"
+            message = @msg_success
+            return message
         end
 
         def clean_value(arg)
@@ -59,7 +63,13 @@ module Jumpstarter
         end
 
         def compose!()
-            str = "#{self.class}.new(#{@dec.chomp(',')}).run!"
+            str = "_inst_ret = #{self.class}.new(#{@dec.chomp(',')}".chomp()
+            str = "#{str}\n).run!"
+            str = "#{str}\nif _inst_ret"
+            str = "#{str}\n\tJumpstarter::Writer.show_success(message: self.success_message!)"
+            str = "#{str}\nelse"
+            str = "#{str}\n\tJumpstarter::Writer.show_error(message: self.success_message!)"
+            str = "#{str}\nend"
             return str
         end
 

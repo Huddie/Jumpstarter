@@ -153,6 +153,5 @@ module Jumpstarter
                 end
             end
         end
-
     end
 end
