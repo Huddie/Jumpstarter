@@ -4,6 +4,7 @@ require 'terminal-table'
 
 module Jumpstarter
     FILE = 'Starter'
+    GEM_LOCK_FILE = 'Gemfile.lock'
     class Setup
         class << self 
 
@@ -16,6 +17,35 @@ module Jumpstarter
                     c = c + 1
                 end
                 return Terminal::Table.new :rows => rows
+            end
+
+            def setup!()
+                plugin_paths = self.find_plugins!
+                parser = Jumpstarter::InstructionParser.new(plugin_paths)
+                proccess_file(parser, Setup.find!)
+            end
+
+            def find_plugins!()
+                # Read Gemfile.lock, finding modules with jumpstarter-plugin-api
+                # dep
+                outp = `gem dependency jumpstarter-plugin-api -R`
+                start_cap = false
+                dep = []
+                outp.each_line do |line|
+                    if start_cap
+                        dep << outp.split().first
+                    end
+                    if line.include? "Used by"
+                        start_cap = true
+                    end
+                end
+                plugin_paths = []
+                dep.each do |d|
+                   outp = `gem which #{d}`
+                   outp = outp.chomp(outp.split('-').last)
+                   plugin_paths << outp
+                end
+                return plugin_paths
             end
 
             def find!()
@@ -34,13 +64,6 @@ module Jumpstarter
                     file_path = path[num]
                 end
                 return file_path
-            end
-            def setup!()
-                proccess_file(Setup.find!)
-            end
-
-            def parse_into_inst(line)
-                return Jumpstarter::InstructionParser.parse(line)
             end
 
             def process_instruction(inst)
@@ -74,12 +97,12 @@ module Jumpstarter
 
                 return text
             end 
-            def proccess_file(path)
+            def proccess_file(parser, path)
                 puts "Processing file #{path}"
                 cmd_file = fill_with_inst!
                 File.open(path, "r") do |f|
                     f.each_line do |line|
-                        inst = parse_into_inst(line)
+                        inst = parser.parse(line)
                         cmd_file = "#{cmd_file}\n#{inst}"
                     end
                 end
